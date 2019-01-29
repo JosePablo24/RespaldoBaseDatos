@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import tabla from './components/Tabla.vue'
+import Otro from  './components/Otro.vue'
 Vue.use(Router)
 
 export default new Router({
@@ -9,7 +10,11 @@ export default new Router({
     {
         path: '/tabla',
         name :'tabla',
-        component: tabla
-        
+        component: tabla        
+    },
+    {
+        path:'/otro',
+        name:'otro',
+        component: Otro
     }
 ]});

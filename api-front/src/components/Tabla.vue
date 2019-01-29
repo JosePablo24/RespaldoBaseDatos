@@ -9,16 +9,16 @@
       <v-btn slot="activator" color="primary" dark>Respaldar Base de Datos</v-btn>
       <v-card>
         <v-card-title>
-          <span class="headline">Ingreo de Datos</span>
+          <span class="headline">Ingreso de Datos</span>
         </v-card-title>
         <v-card-text>
           <v-container grid-list-md>
             <v-layout wrap>
               <v-flex xs12 sm6 md4>
-                <v-text-field label="Nombre*" required></v-text-field>
+                <v-text-field v-model="nombre" label="Nombre*" required></v-text-field>
               </v-flex>
               <v-flex xs12 sm6 md4>
-                <v-text-field label="Base de Datos" hint="example of helper text only on focus"></v-text-field>
+                <v-text-field v-model="baseDatos" label="Base de Datos" hint="example of helper text only on focus"></v-text-field>
               </v-flex>
               <v-flex xs12 sm6 md4>
                 <v-text-field
@@ -26,15 +26,13 @@
                   hint="example of persistent helper text"
                   persistent-hint
                   required
+                  v-model="Usuario"
                 ></v-text-field>
               </v-flex>              
               <v-flex xs12>
-                <v-text-field label="Password*" type="password" required></v-text-field>
-              </v-flex>
-              <v-flex xs12>
-                <v-text-field label="Password*" type="password" required></v-text-field>
-              </v-flex>
-                <v-flex xs12 lg6>
+                <v-text-field v-model="contrasena" label="Password*" type="password" required></v-text-field>
+              </v-flex>              
+      <v-flex xs12 lg6>
         <v-menu
           ref="menu1"
           :close-on-content-click="false"
@@ -95,8 +93,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" flat @click="dialog = false">Close</v-btn>
-          <v-btn color="blue darken-1" flat @click="dialog = false">Save</v-btn>
+          <v-btn color="blue darken-1" flat @click="close">Close</v-btn>
+          <v-btn color="blue darken-1" flat @click="save">Save</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -129,10 +127,10 @@
               <v-icon>backup</v-icon>
             </v-btn>
             <v-btn color="error" fab small dark>
-              <v-icon>delete</v-icon>
+              <v-icon @click="deleteItem(props.item.id)">delete</v-icon>
             </v-btn>
             <v-btn color="info" fab small dark>
-              <v-icon>edit</v-icon>
+              <v-icon @click="editItem(props.item.id)">edit</v-icon>
             </v-btn>
           </div>
           
@@ -143,26 +141,8 @@
 </template>
 
 <script>
+
   export default {
-    // data () {
-    //   return {
-    //     dialog: false,        
-    //     headers: [
-    //       {
-    //         text: 'Dessert (100g serving)',
-    //         align: 'left',
-    //         sortable: false,
-    //         value: 'name'
-    //       },
-    //       { text: 'Calories', value: 'calories' },
-    //       { text: 'Fat (g)', value: 'fat' },
-    //       { text: 'Carbs (g)', value: 'carbs' },
-    //       { text: 'Protein (g)', value: 'protein' },
-    //       { text: 'Iron (%)', value: 'iron' }
-    //     ],
-       
-    //   }
-    // },
     data: vm => ({
       date: new Date().toISOString().substr(0, 10),
       dateFormatted: vm.formatDate(new Date().toISOString().substr(0, 10)),
@@ -208,7 +188,8 @@
      computed: {
       computedDateFormatted () {
         return this.formatDate(this.date)
-      }
+      },
+      
     },
 
     watch: {
@@ -228,7 +209,66 @@
 
         const [month, day, year] = date.split('/')
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-      }
+      },
+      initialize () {
+        API.get('v1/settings').then((response) =>{
+            this.desserts = response.data
+        })
+      },
+
+      editItem (item) {
+        API.get('v1/settings/'+item).then((response) =>{            
+            this.name=response.data.name
+            this.data=response.data.name_db
+            this.user=response.data.user_db
+            this.pass=response.data.password_db
+            this.date=response.data.date_backup
+            this.hora=response.data.time_backup
+            this.editar=true
+           })
+        this.dialog = true
+      },
+
+      deleteItem (item) {
+        API.delete('v1/settings/'+item).then(() =>{
+            this.initialize()
+           })
+      },
+      ejec(){
+        console.log('soy un metodo we :c')
+      },
+      close () {
+        this.dialog = false
+      },
+
+      save () {
+          if(this.editar == false){
+              API.post('v1/settings',{
+                "name": this.name,
+                "name_db": this.data,
+                "user_db": this.user,
+                "password_db": this.pass,
+                "date_backup": this.date,
+                "time_backup": this.hora,
+                "status":"false"
+              }).then(() =>{
+                    this.initialize()
+              })
+          }else{
+              API.put('v1/settings/'+this.id,{
+                "name": this.name,
+                "name_db": this.data,
+                "user_db": this.user,
+                "password_db": this.pass,
+                "date_backup": this.date,
+                "time_backup": this.hora
+              }).then(() =>{
+                  this.editar=false
+                  this.initialize()
+              })
+          }
+        this.close()
+      }      
     }
   }
 </script>
